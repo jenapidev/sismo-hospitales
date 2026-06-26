@@ -24,6 +24,18 @@ export function foldAccents(s: string): string {
     .replace(/[ñ]/gi, (c) => (c === c.toUpperCase() ? "N" : "n"));
 }
 
+// Canonical display names per slug — used to auto-create hospitals seen in the data
+// but not in the seed (e.g. Ricardo Baquero González).
+export const SLUG_NAMES: Record<string, string> = {
+  "universitario-caracas": "Hospital Universitario de Caracas",
+  luciani: "Hospital Domingo Luciani",
+  "perez-carreno": "Hospital Pérez Carreño",
+  "vargas-caracas": "Hospital Vargas de Caracas",
+  "carlos-arvelo": "Hospital Carlos Arvelo",
+  "ricardo-baquero": "Hospital Ricardo Baquero González",
+  catia: "Hospital de Catia",
+};
+
 // Distinctive fragments (folded, lowercase) → canonical slug. Order doesn't matter;
 // when several match, the earliest position in the row wins.
 const PATTERNS: { re: RegExp; slug: string }[] = [
