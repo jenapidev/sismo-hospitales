@@ -50,14 +50,21 @@ export interface RecordRow {
   updated_at: string;
 }
 
-/** Public-safe DTO returned to anonymous users (cédula masked, no proof/identity). */
+/**
+ * Public DTO returned to anonymous users. Exposes the already-public registry
+ * fields (full name, full cédula, age, status, ward notes). Excludes only the
+ * newly submitted sensitive fields (ID-proof scans, reporter/verifier contact),
+ * which are coordinator-only.
+ */
 export interface PublicRecord {
   id: string;
   fullName: string;
+  cedula: string | null;
   hospitalId: string;
   hospitalName: string;
   status: Status;
+  age: number | null;
   admissionDate: string | null;
-  maskedCedula: string | null;
+  notes: string | null;
   verificationStatus: VerificationStatus;
 }

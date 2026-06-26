@@ -1,12 +1,15 @@
 -- Schema for Sismo · Hospitales
 -- Privacy model:
---   * Anonymous users CANNOT read the base `records`/`verifications` tables at all
---     (RLS enabled, no anon SELECT policy). This keeps ID-proof paths, submitter
---     contact, and full cédulas out of anonymous reach even via the raw anon key.
---   * Public reads go through the `records_public` VIEW, which exposes only
---     non-sensitive columns. The view runs with owner privileges (it is NOT a
---     security_invoker view), so it bypasses the base-table RLS — this is the
---     intended, audited boundary for what the public may see.
+--   This is a public disaster-response service. The hospital registry (names,
+--   cédulas, ages, status, ward) is ALREADY public data and is published here in
+--   full so families and rescue teams can search and confirm identity.
+--   * Anonymous users read the registry through the `records_public` VIEW, which
+--     exposes the registry fields (including full cédula) but EXCLUDES the newly
+--     submitted, sensitive fields: uploaded ID-proof scan paths and the
+--     reporter/verifier contact info.
+--   * The base `records`/`verifications` tables have RLS enabled with no anon
+--     SELECT policy, so those sensitive submission fields are never reachable via
+--     the raw anon key — only coordinators (and server-side service role) see them.
 --   * Server actions, search, sync, and the coordinator admin use the service-role
 --     key, which bypasses RLS.
 
@@ -104,17 +107,22 @@ create trigger records_set_updated_at
   for each row execute function set_updated_at();
 
 -- ---------------------------------------------------------------------------
--- Public-safe view (no cédula, no proof path, no submitter/verifier identity)
+-- Public registry view. Exposes the already-public registry fields INCLUDING
+-- full cédula and ward notes. EXCLUDES only the newly submitted sensitive fields:
+-- person_id_proof_path, submitter_name, submitter_contact (coordinator-only).
 -- ---------------------------------------------------------------------------
 create view records_public as
   select
     id,
     full_name,
+    cedula,
     hospital_id,
     status,
     admission_date,
     age,
     sex,
+    notes,
+    source,
     verification_status,
     needs_review,
     duplicate_group,

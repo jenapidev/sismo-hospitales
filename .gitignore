@@ -8,3 +8,10 @@ build/
 *.log
 .vercel
 .DS_Store
+
+# Real source files contain victims' personal data (names, cédulas) — NEVER commit.
+# Only anonymized fixtures under tests/fixtures/ may be committed.
+/samples/
+
+# TS build cache
+*.tsbuildinfo

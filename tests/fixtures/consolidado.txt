@@ -1,0 +1,6 @@
+NumApellidosCIEdadSexoProcedenciaIngresados x sismo a:fecha de actualizaciónServicio
+1PEREZ MARIA1234567835FBarutaHospital Universitario de Caracas25/6/26Cirugía General
+2GOMEZ JUAN60Hospital Domingo Luciani (El Llanito)25/6/26 pm
+3SILVA PEDRO9876543mPetareHospital Pérez Carreño24/6/26 11.54pmTRIAJE
+4PEREZ MARIA1234567835FBarutaHospital Vargas de Caracas25/6/26
+5RODRIGUEZ ANA28Hospital de Catia25/6/26 pm

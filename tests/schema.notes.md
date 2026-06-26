@@ -9,19 +9,24 @@ after applying `0001_init.sql` and `0002_seed_hospitals.sql`.
 - Expect: 4 tables, 3 enums, 1 view, 6 hospital rows.
 
 ## RLS / privacy checks (use the ANON key, not service role)
-1. `select * from records_public;` → works (returns rows, no cédula column).
-2. `select * from records;` → returns **0 rows** (RLS blocks anon on base table).
-3. `select person_id_proof_path from records;` → permission denied / 0 rows.
-4. `select * from verifications;` → returns **0 rows**.
-5. `select * from hospitals;` → returns 6 rows (world-readable).
-6. `select * from sync_runs;` → works (world-readable).
+The registry (incl. full cédula) is intentionally public; only uploaded ID-proof
+scans and reporter/verifier contact are private to coordinators.
+1. `select * from records_public;` → works; INCLUDES `cedula`, `notes`; has NO
+   `person_id_proof_path` / `submitter_name` / `submitter_contact` columns.
+2. `select * from records;` → returns **0 rows** (RLS blocks anon on base table, so
+   the private submission columns are unreachable via the raw anon key).
+3. `select * from verifications;` → returns **0 rows** (verifier proof/contact hidden).
+4. `select * from hospitals;` → returns 6 rows (world-readable).
+5. `select * from sync_runs;` → works (world-readable).
 
 ## Service-role checks
 - Insert a `records` row with `source='public_report'` → succeeds.
-- `records_public` reflects it (when `hidden=false`) and omits cédula/proof/submitter.
+- `records_public` reflects it (when `hidden=false`) with full cédula, but omits the
+  proof path + submitter fields.
 
 Record PASS/FAIL here when run:
-- [ ] anon cannot read base `records`
-- [ ] anon cannot read `verifications`
-- [ ] `records_public` exposes no cédula/proof/submitter columns
+- [ ] anon CAN read `records_public` (registry incl. full cédula)
+- [ ] anon cannot read base `records` (proof/submitter columns unreachable)
+- [ ] anon cannot read `verifications` (verifier proof/contact unreachable)
+- [ ] `records_public` has no proof/submitter columns
 - [ ] hospitals seeded (6)

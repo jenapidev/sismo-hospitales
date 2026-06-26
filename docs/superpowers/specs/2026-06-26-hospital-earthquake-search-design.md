@@ -97,15 +97,20 @@ serverless worker.
 - `id`, `started_at`, `finished_at`, `files_seen`, `records_parsed`, `inserted`,
   `updated`, `flagged_review`, `errors` (jsonb), `status`
 
-**Public view `records_public`** exposes only safe fields: `full_name`, `hospital`,
-`status`, `admission_date`, masked cédula, `verification_status`, community confirm/dispute
-counts. It never exposes proof paths, submitter/verifier identity, or full cédula.
+**Public view `records_public`** exposes the already-public registry fields:
+`full_name`, **full `cedula`**, `hospital`, `status`, `admission_date`, `age`, ward
+`notes`, `verification_status`. It excludes ONLY the newly submitted sensitive fields:
+uploaded ID-proof scan paths and reporter/verifier contact info.
 
 ### Cédula handling
-- Stored normalized for matching/dedup.
-- **Public listings show it masked** (`V-12.34X.XXX`).
-- **Search by full cédula works** (exact-match lookup) so a family can confirm "is
-  V-12345678 here?" without us broadcasting full cédulas in result lists.
+- This is a public disaster-response service. The source registry is already public and
+  is published here **in full, including the cédula** — families and rescue teams use it
+  to confirm identity. (Legal in Venezuela per the project owner; data already public.)
+- Stored normalized for matching/dedup; displayed in full publicly.
+- **Search by name or cédula** both work.
+- The only data gated to coordinators is the *uploaded ID-proof scans* and the
+  *reporter/verifier contact* — new submissions handed to us for verification, not part of
+  the already-public registry.
 
 ## Sync + parsing pipeline (the hard part)
 
@@ -159,8 +164,8 @@ Per hospital and overall:
 ## Front-end
 
 Spanish-first, English toggle. Mobile-first (families will use phones).
-- `/` — single search box (name or cédula) → results (masked cédula, hospital, status,
-  date, verification badge).
+- `/` — single search box (name or cédula) → results (full name, full cédula, hospital,
+  status, age, date, verification badge).
 - `/record/[id]` — record detail + "confirm/dispute" action.
 - `/report` — report a person.
 - `/stats` — dashboard.
@@ -174,9 +179,10 @@ Spanish-first, English toggle. Mobile-first (families will use phones).
 - ID-proof images in a **private Supabase Storage bucket**; coordinators access via
   short-lived signed URLs.
 - Public repo ⇒ zero secrets in code; keys in GitHub/Vercel secrets.
-- **Policy caveat (owner's call, not the app's):** publishing victims' names/status online
-  has real consent and safety implications. The app provides masking, private proof, and
-  moderation; a responsible person must own the decision to operate it.
+- **Policy basis (owner's call):** the registry (names, cédulas, status) is already
+  public and republishing it here is legal in Venezuela per the project owner; the goal is
+  to help families and rescue teams. The app therefore publishes the registry in full and
+  gates only newly submitted proof scans + contact behind coordinators.
 
 ## Testing
 
@@ -184,7 +190,8 @@ Spanish-first, English toggle. Mobile-first (families will use phones).
 - **Sync idempotency test**: run sync twice over the same fixtures → no new/changed rows.
 - **Dedup test**: same cédula at two hospitals → one `duplicate_group`, surfaced.
 - **RLS tests**: anon cannot read proof/submitter/verifier fields or Storage objects.
-- **Masking test**: `records_public` never emits a full cédula.
+- **Public-view test**: `records_public` exposes full cédula but never the proof path or
+  reporter/verifier contact columns.
 
 ## Open questions / deferred
 

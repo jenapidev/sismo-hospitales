@@ -1,0 +1,9 @@
+REGISTRO MAESTRO DE PACIENTES – SISMO VENEZUELA 2026
+Para buscar: use Ctrl+F (Windows) o Cmd+F (Mac) y escriba el nombre o cédula
+N°HOSPITALAPELLIDOS Y NOMBRESEDAD
+1Hospital Universitario de CaracasPEREZ MARIA35
+2Hospital Universitario de CaracasGOMEZ JUAN60
+3Hospital de CatiaRODRIGUEZ ANA28
+4Hospital Domingo LucianiLOPEZ CARLOS
+5Hospital Vargas de CaracasPEREZ MARIA35
+6Hospital Pérez CarreñoSILVA PEDRO19

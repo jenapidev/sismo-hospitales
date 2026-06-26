@@ -12,8 +12,8 @@
 
 - **Free tiers only.** No paid services. No secrets committed — all keys in GitHub Actions secrets / Vercel env vars. Repo is public (MIT license).
 - **No login required to view, report, or verify.** Coordinator login (Supabase Auth) only for moderation.
-- **Privacy is RLS-enforced, not UI-only.** Anonymous role can read only `records_public`; ID-proof images, submitter/verifier identity, and full cédula are never exposed to anon.
-- **Public listings mask cédula** (`V-12.34X.XXX`); exact-cédula search still works.
+- **Privacy is RLS-enforced, not UI-only.** Anonymous role reads only `records_public`; the uploaded ID-proof scans and reporter/verifier contact are never exposed to anon. The registry itself (names, **full cédula**, age, status, ward notes) is public by design.
+- **Cédula is shown in full publicly.** The source registry is already public and legal to republish (project owner's call); families/rescue confirm identity by it. No masking. Search works by name or cédula.
 - **Spanish-first**, English toggle. Mobile-first.
 - **Sync is idempotent.** Re-running over identical Drive content produces zero new/changed rows. Coordinator-verified and public-reported records are never overwritten by Drive.
 - **Status enum (exact):** `admitted | discharged | transferred | deceased | unknown`.
@@ -599,15 +599,15 @@ Add `tsx` to devDeps.
 - Create: `app/page.tsx`, `app/api/search/route.ts`, `lib/search.ts`, `app/components/RecordCard.tsx`
 
 **Interfaces:**
-- Produces: `searchRecords(query: string)` (server, admin client): if query normalizes to a cédula → exact normalized match; else case-insensitive name `ilike`. Returns masked, public-safe DTOs only (`maskCedula`, hospital name, status, date, verification badge). Never returns proof/submitter fields.
+- Produces: `searchRecords(query: string)` (server): if query normalizes to a cédula → exact normalized match; else case-insensitive name `ilike`. Reads from `records_public` (anon-safe) and returns `PublicRecord` DTOs (full name, full cédula, hospital name, age, status, date, verification badge). The view already excludes proof/submitter fields.
 
-- [ ] **Step 1: Write failing test** `tests/search.test.ts` — cédula query returns masked output and never the raw cédula; name query matches partial.
+- [ ] **Step 1: Write failing test** `tests/search.test.ts` — cédula query normalizes + exact-matches; name query matches partial (case-insensitive); DTO carries full cédula, no proof/submitter fields.
 - [ ] **Step 2: Run → FAIL.**
-- [ ] **Step 3: Implement `lib/search.ts` + route**, mapping rows → DTO with `maskCedula`.
+- [ ] **Step 3: Implement `lib/search.ts` + route**, mapping `records_public` rows → `PublicRecord` DTO (full cédula).
 - [ ] **Step 4: Run → PASS.**
-- [ ] **Step 5: Build the search page** — one input, results list of `RecordCard` (name, hospital, status chip, masked cédula, verification badge), empty + loading states, Spanish copy.
-- [ ] **Step 6: Manual check** `npm run dev` → search returns masked results.
-- [ ] **Step 7: Commit** — `git commit -m "feat: public search with masked cedula output"`
+- [ ] **Step 5: Build the search page** — one input, results list of `RecordCard` (name, full cédula, hospital, status chip, age, verification badge), empty + loading states, Spanish copy.
+- [ ] **Step 6: Manual check** `npm run dev` → search returns full registry results.
+- [ ] **Step 7: Commit** — `git commit -m "feat: public search over the registry"`
 
 ---
 
@@ -628,21 +628,22 @@ Add `tsx` to devDeps.
 
 ---
 
-## Task 12: Verify / dispute (server action) + cédula view hardening
+## Task 12: Verify / dispute (server action)
 
 **Files:**
-- Create: `app/record/[id]/page.tsx`, `app/actions/verify.ts`, `supabase/migrations/0003_drop_cedula_from_public_view.sql`
+- Create: `app/record/[id]/page.tsx`, `app/actions/verify.ts`
 
 **Interfaces:**
 - Produces: `submitVerification(recordId, formData)` server action: require verifier name + contact + verifier ID-proof file → upload to `proofs/` → insert `verifications` row → if `confirm` count ≥ 2 and status is `unverified`, set `verification_status='community_confirmed'`.
-- Hardening: drop `cedula_raw` from `records_public` now that all cédula access is server-side.
 
-- [ ] **Step 1: Migration** dropping/recreating `records_public` without `cedula_raw`.
-- [ ] **Step 2: Write failing test** for the "2 confirmations → community_confirmed" threshold logic (pure helper `nextStatusAfterVerification`).
-- [ ] **Step 3: Run → FAIL → implement helper → PASS.**
-- [ ] **Step 4: Build the record-detail page** with confirm/dispute form (collects verifier proof) and the server action.
-- [ ] **Step 5: Manual check** — two confirms flips the badge to "confirmado por la comunidad"; verifier proof not visible to anon.
-- [ ] **Step 6: Commit** — `git commit -m "feat: community verify/dispute + harden public cedula view"`
+(Note: no cédula-view hardening needed — the registry incl. full cédula is public by
+design; `records_public` already excludes only proof/submitter/verifier fields.)
+
+- [ ] **Step 1: Write failing test** for the "2 confirmations → community_confirmed" threshold logic (pure helper `nextStatusAfterVerification`).
+- [ ] **Step 2: Run → FAIL → implement helper → PASS.**
+- [ ] **Step 3: Build the record-detail page** with confirm/dispute form (collects verifier proof) and the server action.
+- [ ] **Step 4: Manual check** — two confirms flips the badge to "confirmado por la comunidad"; verifier proof not visible to anon.
+- [ ] **Step 5: Commit** — `git commit -m "feat: community verify/dispute"`
 
 ---
 
@@ -697,7 +698,7 @@ Add `tsx` to devDeps.
 ## Self-Review
 
 **Spec coverage:**
-- Public search (masked) → Tasks 10, 12. ✔
+- Public search (full registry incl. cédula) → Tasks 10, 12. ✔
 - Open report, no login → Task 11. ✔
 - Community verify/dispute with verifier proof → Task 12. ✔
 - Mirror Drive every 30 min → Task 9. ✔
