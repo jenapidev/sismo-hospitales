@@ -143,14 +143,18 @@ export function createSupabaseRecordsRepo(admin: any): RecordsRepo {
   return {
     async getExisting(refs: string[]) {
       const map = new Map<string, ExistingRecord>();
+      if (refs.length === 0) return map;
       const cols =
         "id,source,verification_status,source_row_ref,full_name,cedula,hospital_id,status,age,sex,admission_date,confidence,needs_review";
-      for (let i = 0; i < refs.length; i += 500) {
-        const chunk = refs.slice(i, i + 500);
+      // refs are `${source_file}#${i}`; fetch by source_file to keep URLs short.
+      const files = [
+        ...new Set(refs.map((r) => r.slice(0, r.lastIndexOf("#")))),
+      ];
+      for (const file of files) {
         const { data, error } = await admin
           .from("records")
           .select(cols)
-          .in("source_row_ref", chunk);
+          .eq("source_file", file);
         if (error) throw new Error(`getExisting failed: ${error.message}`);
         for (const r of data ?? []) map.set(r.source_row_ref, r as ExistingRecord);
       }
