@@ -119,7 +119,15 @@ export async function addAccount(fd: FormData) {
     ownerName: s(fd, "ownerName"),
   });
   if (!v.ok) return;
-  await admin.from("colecta_accounts").insert({ colecta_id: colectaId, ...v.value });
+  await admin.from("colecta_accounts").insert({
+    colecta_id: colectaId,
+    method: v.value.method,
+    phone: v.value.phone,
+    bank_entity: v.value.bankEntity,
+    cedula: v.value.cedula,
+    email: v.value.email,
+    owner_name: v.value.ownerName,
+  });
   revalidatePath(`/colectas/${colectaId}/gestionar`);
   revalidatePath(`/colectas/${colectaId}`);
 }
