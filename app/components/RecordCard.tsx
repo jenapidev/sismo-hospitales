@@ -40,6 +40,11 @@ export function RecordCard({ record }: { record: PublicRecord }) {
           </div>
         )}
       </dl>
+      {record.otherHospitals && record.otherHospitals.length > 0 && (
+        <p className="mt-2 text-xs text-amber-700">
+          También aparece en: {record.otherHospitals.join(", ")}
+        </p>
+      )}
     </Link>
   );
 }

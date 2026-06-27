@@ -1,5 +1,62 @@
 import { describe, it, expect } from "vitest";
-import { buildSearchPlan, toPublicRecord, searchRecords } from "@/lib/search";
+import { buildSearchPlan, toPublicRecord, searchRecords, dedupeByCedula } from "@/lib/search";
+import type { PublicRecord } from "@/lib/types";
+
+function pr(over: Partial<PublicRecord>): PublicRecord {
+  return {
+    id: "x",
+    fullName: "RAMOS MARYELIS",
+    cedula: "V32111741",
+    hospitalId: "h1",
+    hospitalName: "Hospital Universitario de Caracas",
+    status: "admitted",
+    age: null,
+    admissionDate: null,
+    notes: null,
+    verificationStatus: "unverified",
+    ...over,
+  };
+}
+
+describe("dedupeByCedula", () => {
+  it("collapses same-cédula records at the same hospital into one", () => {
+    const out = dedupeByCedula([
+      pr({ id: "a" }),
+      pr({ id: "b" }),
+      pr({ id: "c", fullName: "RAMOS/SILVA MARYELIS" }),
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].cedula).toBe("V32111741");
+    expect(out[0].mergedCount).toBe(3);
+    expect(out[0].otherHospitals).toEqual([]);
+  });
+
+  it("keeps cross-hospital appearances as one result but lists the other hospitals", () => {
+    const out = dedupeByCedula([
+      pr({ id: "a", hospitalName: "Hospital Universitario de Caracas" }),
+      pr({ id: "b", hospitalName: "Hospital Vargas de Caracas" }),
+    ]);
+    expect(out).toHaveLength(1);
+    expect(out[0].otherHospitals).toHaveLength(1);
+  });
+
+  it("prefers the most-verified record as canonical", () => {
+    const out = dedupeByCedula([
+      pr({ id: "a", verificationStatus: "unverified" }),
+      pr({ id: "b", verificationStatus: "coordinator_verified" }),
+    ]);
+    expect(out[0].id).toBe("b");
+    expect(out[0].verificationStatus).toBe("coordinator_verified");
+  });
+
+  it("never merges records without a cédula", () => {
+    const out = dedupeByCedula([
+      pr({ id: "a", cedula: null, fullName: "ANA" }),
+      pr({ id: "b", cedula: null, fullName: "ANA" }),
+    ]);
+    expect(out).toHaveLength(2);
+  });
+});
 
 describe("buildSearchPlan", () => {
   it("treats cédula-like input as an exact cédula match (normalized)", () => {

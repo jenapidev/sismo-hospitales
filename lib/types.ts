@@ -67,4 +67,8 @@ export interface PublicRecord {
   admissionDate: string | null;
   notes: string | null;
   verificationStatus: VerificationStatus;
+  /** When several source rows for the same cédula are collapsed into one result. */
+  mergedCount?: number;
+  /** Other hospitals the same cédula appears in (besides hospitalName). */
+  otherHospitals?: string[];
 }

@@ -45,6 +45,51 @@ export function toPublicRecord(row: PublicRow, hospitalName: string): PublicReco
 
 const MAX_RESULTS = 100;
 
+const VERIFICATION_RANK: Record<VerificationStatus, number> = {
+  coordinator_verified: 3,
+  community_confirmed: 2,
+  disputed: 1,
+  unverified: 0,
+};
+
+/**
+ * Collapse records sharing a cédula into one result (a person often appears in
+ * several source lists). Records without a cédula are left untouched. The most
+ * verified / most complete record becomes canonical; other hospitals are listed.
+ */
+export function dedupeByCedula(records: PublicRecord[]): PublicRecord[] {
+  const groups = new Map<string, PublicRecord[]>();
+  const singles: PublicRecord[] = [];
+
+  for (const r of records) {
+    if (!r.cedula) {
+      singles.push(r);
+      continue;
+    }
+    const key = r.cedula.toUpperCase();
+    const g = groups.get(key);
+    if (g) g.push(r);
+    else groups.set(key, [r]);
+  }
+
+  const merged: PublicRecord[] = [];
+  for (const group of groups.values()) {
+    const canonical = [...group].sort(
+      (a, b) =>
+        VERIFICATION_RANK[b.verificationStatus] - VERIFICATION_RANK[a.verificationStatus] ||
+        b.fullName.length - a.fullName.length
+    )[0];
+    const hospitals = [...new Set(group.map((r) => r.hospitalName))];
+    merged.push({
+      ...canonical,
+      mergedCount: group.length,
+      otherHospitals: hospitals.filter((h) => h !== canonical.hospitalName),
+    });
+  }
+
+  return [...merged, ...singles].sort((a, b) => a.fullName.localeCompare(b.fullName));
+}
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Search the public registry by name or cédula. Reads only `records_public`
@@ -69,7 +114,8 @@ export async function searchRecords(
   const { data, error } = await q.order("full_name").limit(MAX_RESULTS);
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((r: PublicRow) =>
+  const mapped = (data ?? []).map((r: PublicRow) =>
     toPublicRecord(r, hmap.get(r.hospital_id) ?? "Hospital no identificado")
   );
+  return dedupeByCedula(mapped);
 }
