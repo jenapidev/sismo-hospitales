@@ -11,10 +11,7 @@ export default async function AcopioPage() {
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <Link href="/" className="text-sm text-gray-500 hover:underline">
-            ← Inicio
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold text-gray-900">Centros de acopio</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Centros de acopio</h1>
           <p className="mt-1 text-sm text-gray-600">
             Encuentra dónde donar o pedir insumos tras el sismo.
           </p>

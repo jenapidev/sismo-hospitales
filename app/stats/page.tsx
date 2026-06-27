@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createAnonClient } from "@/lib/supabase/anon";
 import { summarize, type StatsRow } from "@/lib/stats";
 import { STATUS_LABELS } from "@/lib/labels";
@@ -57,10 +56,7 @@ export default async function StatsPage() {
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
-      <Link href="/" className="text-sm text-gray-500 hover:underline">
-        ← Volver a la búsqueda
-      </Link>
-      <h1 className="mt-2 text-2xl font-bold text-gray-900">Estadísticas</h1>
+      <h1 className="text-2xl font-bold text-gray-900">Estadísticas</h1>
       <p className="mt-1 text-sm text-gray-500">
         Última actualización de datos: {freshness(lastRun?.finished_at ?? null)}
       </p>

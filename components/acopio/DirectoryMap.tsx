@@ -4,13 +4,14 @@ import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 import Link from "next/link";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import { markerIcon, CARACAS } from "./icon";
+import { iconFor, CARACAS, type MarkerState } from "./icon";
 
 export interface MapCenter {
   id: string;
   name: string;
   lat: number | null;
   lng: number | null;
+  markerState?: MarkerState;
 }
 
 /** Re-fit the map to the current set of pins whenever they change. */
@@ -40,7 +41,7 @@ export function DirectoryMap({ centers }: { centers: MapCenter[] }) {
         />
         <FitBounds points={points} />
         {pinned.map((c) => (
-          <Marker key={c.id} position={[c.lat!, c.lng!]} icon={markerIcon}>
+          <Marker key={c.id} position={[c.lat!, c.lng!]} icon={iconFor(c.markerState)}>
             <Popup>
               <Link href={`/acopio/${c.id}`} className="text-blue-700 underline">
                 {c.name}

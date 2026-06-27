@@ -28,11 +28,33 @@ export function AcopioBrowser({ centers }: { centers: CenterWithCounts[] }) {
 
   const select = "rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-gray-500";
 
+  const mapCenters = shown.map((c) => ({
+    id: c.id,
+    name: c.name,
+    lat: c.lat,
+    lng: c.lng,
+    markerState: category
+      ? c.haveCategories.includes(category)
+        ? ("have" as const)
+        : c.needCategories.includes(category)
+          ? ("need" as const)
+          : undefined
+      : undefined,
+  }));
+
   return (
     <div>
-      <DirectoryMapClient
-        centers={shown.map((c) => ({ id: c.id, name: c.name, lat: c.lat, lng: c.lng }))}
-      />
+      <DirectoryMapClient centers={mapCenters} />
+      {category && (
+        <div className="mt-2 flex gap-4 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-green-600" /> Tienen {category}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block h-2.5 w-2.5 rounded-full bg-orange-500" /> Necesitan {category}
+          </span>
+        </div>
+      )}
 
       <div className="mt-4">
         <input
