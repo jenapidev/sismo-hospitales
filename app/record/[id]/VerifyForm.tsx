@@ -64,7 +64,12 @@ export function VerifyForm({ recordId }: { recordId: string }) {
 
       <div>
         <label className={label}>Tu prueba de identidad (foto o PDF) *</label>
-        <input name="proof" type="file" accept="image/*,application/pdf" className="mt-1 w-full text-sm" />
+        <input
+          name="proof"
+          type="file"
+          accept="image/*,application/pdf"
+          className="mt-1 w-full text-sm text-gray-600 file:mr-3 file:rounded-md file:border-0 file:bg-gray-100 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+        />
         <p className="mt-1 text-xs text-gray-500">Solo la ven los coordinadores.</p>
         <Err msg={e.proof} />
       </div>

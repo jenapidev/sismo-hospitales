@@ -50,7 +50,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string; onNavigate?: () 
             href={item.href}
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
-            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
+            className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors active:bg-gray-200 ${
               active
                 ? "bg-gray-100 font-medium text-gray-900"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
