@@ -9,7 +9,7 @@ export const PROOFS_BUCKET = "proofs";
 export async function uploadProof(
   admin: any,
   file: File,
-  folder: "reports" | "verifications"
+  folder: "reports" | "verifications" | "donations"
 ): Promise<string> {
   const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
   const path = `${folder}/${globalThis.crypto.randomUUID()}.${ext}`;
