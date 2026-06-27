@@ -18,7 +18,7 @@ export default async function ColectaLoginPage({
       </Link>
       <h1 className="mt-3 text-2xl font-bold text-gray-900">Acceso de responsables</h1>
       <p className="mt-1 mb-5 text-sm text-gray-600">
-        Inicia sesión con tu correo para crear o gestionar una colecta.
+        Inicia sesión con tu correo y contraseña para crear o gestionar una colecta.
       </p>
       <LoginForm next={dest} />
     </main>

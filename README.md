@@ -37,8 +37,10 @@ npm run dev                  # http://localhost:3000
 1. Create a project at [supabase.com](https://supabase.com).
 2. **SQL Editor** → run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`supabase/migrations/0002_seed_hospitals.sql`](supabase/migrations/0002_seed_hospitals.sql), [`supabase/migrations/0003_acopio.sql`](supabase/migrations/0003_acopio.sql) (centros de acopio), then [`supabase/migrations/0004_colectas.sql`](supabase/migrations/0004_colectas.sql) (colectas).
 3. **Storage** → create a **private** bucket named `proofs` (or run `npx tsx scripts/setup-storage.ts` with env set).
-4. **Authentication → URL Configuration** → add your site URL and `<site>/auth/callback`
-   (and `http://localhost:3000/auth/callback` for local) to the redirect allowlist.
+4. **Authentication → Providers → Email** → turn **OFF "Confirm email"** so sign-ups are
+   instant (email/password auth — no per-login emails, so email rate limits never bottleneck
+   logins at scale). Keep `<site>/auth/callback` + `http://localhost:3000/auth/callback` in
+   the redirect allowlist (used only if you ever re-enable email confirmation / password reset).
 5. Copy the **Project URL**, **anon/publishable key**, and **service_role secret key**.
 
 ### 2. Vercel

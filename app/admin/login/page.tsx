@@ -11,9 +11,9 @@ export default function AdminLoginPage() {
       </Link>
       <h1 className="mt-3 text-2xl font-bold text-gray-900">Acceso de coordinadores</h1>
       <p className="mt-1 mb-5 text-sm text-gray-600">
-        Solo para coordinadores autorizados. Recibirás un enlace por correo.
+        Solo para coordinadores autorizados. Inicia sesión con tu correo y contraseña.
       </p>
-      <LoginForm />
+      <LoginForm next="/admin" />
     </main>
   );
 }
