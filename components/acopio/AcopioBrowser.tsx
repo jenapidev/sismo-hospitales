@@ -4,10 +4,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ITEM_CATEGORIES } from "@/lib/acopio";
 import type { CenterWithCounts } from "@/lib/acopio-data";
+import { DirectoryMapClient } from "./DirectoryMapClient";
 
 type Tipo = "todos" | "tienen" | "necesitan";
 
-export function CenterList({ centers }: { centers: CenterWithCounts[] }) {
+export function AcopioBrowser({ centers }: { centers: CenterWithCounts[] }) {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState("");
   const [tipo, setTipo] = useState<Tipo>("todos");
@@ -29,48 +30,54 @@ export function CenterList({ centers }: { centers: CenterWithCounts[] }) {
 
   return (
     <div>
-      <input
-        type="search"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Filtrar por nombre…"
-        className="mb-2 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-gray-500"
+      <DirectoryMapClient
+        centers={shown.map((c) => ({ id: c.id, name: c.name, lat: c.lat, lng: c.lng }))}
       />
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <select value={category} onChange={(e) => setCategory(e.target.value)} className={select}>
-          <option value="">Todas las categorías</option>
-          {ITEM_CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <select
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value as Tipo)}
-          disabled={!category}
-          className={`${select} disabled:opacity-50`}
-        >
-          <option value="todos">Tienen o necesitan</option>
-          <option value="tienen">Tienen</option>
-          <option value="necesitan">Necesitan</option>
-        </select>
-        {(category || needle) && (
-          <button
-            type="button"
-            onClick={() => {
-              setQ("");
-              setCategory("");
-              setTipo("todos");
-            }}
-            className="text-sm text-gray-500 hover:underline"
+
+      <div className="mt-4">
+        <input
+          type="search"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Filtrar por nombre…"
+          className="mb-2 w-full rounded-md border border-gray-300 px-3 py-2 outline-none focus:border-gray-500"
+        />
+        <div className="flex flex-wrap items-center gap-2">
+          <select value={category} onChange={(e) => setCategory(e.target.value)} className={select}>
+            <option value="">Todas las categorías</option>
+            {ITEM_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value as Tipo)}
+            disabled={!category}
+            className={`${select} disabled:opacity-50`}
           >
-            Limpiar
-          </button>
-        )}
+            <option value="todos">Tienen o necesitan</option>
+            <option value="tienen">Tienen</option>
+            <option value="necesitan">Necesitan</option>
+          </select>
+          {(category || needle) && (
+            <button
+              type="button"
+              onClick={() => {
+                setQ("");
+                setCategory("");
+                setTipo("todos");
+              }}
+              className="text-sm text-gray-500 hover:underline"
+            >
+              Limpiar
+            </button>
+          )}
+        </div>
       </div>
 
-      <p className="mb-2 text-xs text-gray-400">{shown.length} centro(s)</p>
+      <p className="mb-2 mt-3 text-xs text-gray-400">{shown.length} centro(s)</p>
 
       <div className="space-y-3">
         {shown.length === 0 && (

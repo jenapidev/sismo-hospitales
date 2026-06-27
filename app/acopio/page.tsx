@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { listCenters } from "@/lib/acopio-data";
-import { DirectoryMapClient } from "@/components/acopio/DirectoryMapClient";
-import { CenterList } from "@/components/acopio/CenterList";
+import { AcopioBrowser } from "@/components/acopio/AcopioBrowser";
 
 export const dynamic = "force-dynamic";
 
@@ -29,10 +28,6 @@ export default async function AcopioPage() {
       </div>
 
       <div className="mt-5">
-        <DirectoryMapClient centers={centers.map((c) => ({ id: c.id, name: c.name, lat: c.lat, lng: c.lng }))} />
-      </div>
-
-      <div className="mt-5">
         {centers.length === 0 ? (
           <p className="rounded-md bg-gray-50 p-4 text-sm text-gray-600">
             Aún no hay centros registrados.{" "}
@@ -42,7 +37,7 @@ export default async function AcopioPage() {
             .
           </p>
         ) : (
-          <CenterList centers={centers} />
+          <AcopioBrowser centers={centers} />
         )}
       </div>
     </main>
