@@ -47,3 +47,11 @@ export function canManageCenter(
   if (center.owner_user_id && center.owner_user_id === user.id) return true;
   return isCoordinatorEmail(user.email, process.env.COORDINATOR_EMAILS ?? "");
 }
+
+/** True if `user` may manage `colecta` — its owner, or any coordinator. */
+export function canManageColecta(
+  user: { id: string; email?: string | null } | null,
+  colecta: { owner_user_id: string | null }
+): boolean {
+  return canManageCenter(user, colecta);
+}
