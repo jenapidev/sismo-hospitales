@@ -84,7 +84,13 @@ function InventoryList({
   empty,
 }: {
   title: string;
-  items: { id: string; name: string; quantity: number | null; unit: string | null }[];
+  items: {
+    id: string;
+    name: string;
+    quantity: number | null;
+    unit: string | null;
+    category: string | null;
+  }[];
   empty: string;
 }) {
   return (
@@ -95,9 +101,16 @@ function InventoryList({
       ) : (
         <ul className="mt-1 space-y-1 text-sm text-gray-700">
           {items.map((i) => (
-            <li key={i.id} className="flex justify-between gap-2">
-              <span>{i.name}</span>
-              <span className="text-gray-500">
+            <li key={i.id} className="flex items-baseline justify-between gap-2">
+              <span>
+                {i.name}
+                {i.category && (
+                  <span className="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                    {i.category}
+                  </span>
+                )}
+              </span>
+              <span className="shrink-0 text-gray-500">
                 {i.quantity != null ? i.quantity : ""} {i.unit ?? ""}
               </span>
             </li>

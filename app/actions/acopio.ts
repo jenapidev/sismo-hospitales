@@ -131,6 +131,28 @@ export async function addItem(formData: FormData) {
   revalidatePath(`/acopio/${centerId}`);
 }
 
+export async function updateItem(formData: FormData) {
+  const centerId = s(formData, "centerId");
+  const itemId = s(formData, "itemId");
+  const admin = await requireCenterManager(centerId);
+  if (!admin) return;
+  const v = validateItem({
+    kind: s(formData, "kind"),
+    name: s(formData, "name"),
+    category: s(formData, "category"),
+    quantity: s(formData, "quantity"),
+    unit: s(formData, "unit"),
+  });
+  if (!v.ok) return;
+  await admin
+    .from("acopio_items")
+    .update(v.value)
+    .eq("id", itemId)
+    .eq("center_id", centerId);
+  revalidatePath(`/acopio/${centerId}/manage`);
+  revalidatePath(`/acopio/${centerId}`);
+}
+
 export async function deleteItem(formData: FormData) {
   const centerId = s(formData, "centerId");
   const itemId = s(formData, "itemId");

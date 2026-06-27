@@ -59,4 +59,10 @@ describe("validateItem", () => {
   it("rejects a negative quantity", () => {
     expect(validateItem({ kind: "have", name: "Agua", quantity: "-5" }).ok).toBe(false);
   });
+  it("accepts a known category and rejects an unknown one", () => {
+    const ok = validateItem({ kind: "have", name: "Agua", category: "Agua" });
+    expect(ok.ok).toBe(true);
+    if (ok.ok) expect(ok.value.category).toBe("Agua");
+    expect(validateItem({ kind: "have", name: "Agua", category: "Bogus" }).ok).toBe(false);
+  });
 });

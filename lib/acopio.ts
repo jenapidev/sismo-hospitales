@@ -78,6 +78,19 @@ export function validateCenter(input: CenterInput): CenterValidation {
   };
 }
 
+/** Fixed supply categories (Spanish) for inventory items. */
+export const ITEM_CATEGORIES = [
+  "Agua",
+  "Alimentos",
+  "Medicinas",
+  "Higiene",
+  "Ropa",
+  "Bebés",
+  "Otros",
+] as const;
+
+export type ItemCategory = (typeof ITEM_CATEGORIES)[number];
+
 export interface ItemInput {
   kind?: string;
   name?: string;
@@ -115,6 +128,10 @@ export function validateItem(input: ItemInput): ItemValidation {
     else quantity = n;
   }
 
+  const category = nullable(input.category);
+  if (category && !ITEM_CATEGORIES.includes(category as ItemCategory))
+    errors.category = "Categoría inválida.";
+
   if (Object.keys(errors).length > 0) return { ok: false, errors };
 
   return {
@@ -122,7 +139,7 @@ export function validateItem(input: ItemInput): ItemValidation {
     value: {
       kind: kind as "have" | "need",
       name,
-      category: nullable(input.category),
+      category,
       quantity,
       unit: nullable(input.unit),
     },
