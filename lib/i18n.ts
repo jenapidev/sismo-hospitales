@@ -11,6 +11,7 @@ export interface Dict {
   stats: string;
   noResults: string;
   orReport: string;
+  acopio: string;
 }
 
 const DICT: Record<Locale, Dict> = {
@@ -23,6 +24,7 @@ const DICT: Record<Locale, Dict> = {
     stats: "Estadísticas",
     noResults: "No se encontraron resultados para",
     orReport: "reporta a esta persona",
+    acopio: "Centros de acopio",
   },
   en: {
     title: "Earthquake · Hospitals",
@@ -33,6 +35,7 @@ const DICT: Record<Locale, Dict> = {
     stats: "Statistics",
     noResults: "No results found for",
     orReport: "report this person",
+    acopio: "Relief centers",
   },
 };
 

@@ -45,11 +45,14 @@ export default async function Home({
         </button>
       </form>
 
-      <div className="mt-4 flex items-center justify-between text-sm">
+      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
         <Link href="/report" className="text-blue-700 hover:underline">
           {t.report}
         </Link>
-        <Link href="/stats" className="text-gray-500 hover:underline">
+        <Link href="/acopio" className="text-blue-700 hover:underline">
+          {t.acopio}
+        </Link>
+        <Link href="/stats" className="ml-auto text-gray-500 hover:underline">
           {t.stats}
         </Link>
       </div>
