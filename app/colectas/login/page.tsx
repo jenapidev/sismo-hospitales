@@ -3,7 +3,14 @@ import { LoginForm } from "@/app/admin/login/LoginForm";
 
 export const dynamic = "force-dynamic";
 
-export default function ColectaLoginPage() {
+export default async function ColectaLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const dest = next && next.startsWith("/") ? next : "/colectas/mias";
+
   return (
     <main className="mx-auto max-w-sm p-6">
       <Link href="/colectas" className="text-sm text-gray-500 hover:underline">
@@ -13,7 +20,7 @@ export default function ColectaLoginPage() {
       <p className="mt-1 mb-5 text-sm text-gray-600">
         Inicia sesión con tu correo para crear o gestionar una colecta.
       </p>
-      <LoginForm next="/colectas/nueva" />
+      <LoginForm next={dest} />
     </main>
   );
 }

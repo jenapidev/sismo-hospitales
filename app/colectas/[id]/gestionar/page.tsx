@@ -6,6 +6,7 @@ import { updateColecta, deleteColecta } from "@/app/actions/colectas";
 import { ColectaForm } from "@/components/colectas/ColectaForm";
 import { AccountsEditor } from "@/components/colectas/AccountsEditor";
 import { DonationsReview } from "@/components/colectas/DonationsReview";
+import { SessionBar } from "@/components/colectas/SessionBar";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +27,7 @@ export default async function GestionarColectaPage({
 
   return (
     <main className="mx-auto max-w-2xl p-4 sm:p-6">
+      <SessionBar next={`/colectas/${id}/gestionar`} />
       <Link href={`/colectas/${id}`} className="text-sm text-gray-500 hover:underline">
         ← Ver colecta
       </Link>

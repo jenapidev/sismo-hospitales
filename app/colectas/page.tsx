@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { listColectas } from "@/lib/colectas-data";
 import { Progress } from "@/components/colectas/Progress";
+import { SessionBar } from "@/components/colectas/SessionBar";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,7 @@ export default async function ColectasPage() {
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
+      <SessionBar next="/colectas" />
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Colectas</h1>

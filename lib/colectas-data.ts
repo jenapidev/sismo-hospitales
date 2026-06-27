@@ -73,6 +73,12 @@ export async function listColectas(): Promise<ColectaWithTotal[]> {
   });
 }
 
+/** Colectas owned by a given user, with totals. */
+export async function listColectasByOwner(ownerId: string): Promise<ColectaWithTotal[]> {
+  const all = await listColectas();
+  return all.filter((c) => c.owner_user_id === ownerId);
+}
+
 export async function getColecta(id: string): Promise<ColectaRow | null> {
   const supabase = createAnonClient();
   const { data } = await supabase.from("colectas").select("*").eq("id", id).maybeSingle();
