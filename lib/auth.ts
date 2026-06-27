@@ -28,3 +28,22 @@ export async function requireCoordinator() {
   if (!user) redirect("/admin/login");
   return user;
 }
+
+/** The authenticated Supabase user (any email), or null. */
+export async function getUser() {
+  const supabase = await createServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user ?? null;
+}
+
+/** True if `user` may edit `center` — its owner, or any coordinator. */
+export function canManageCenter(
+  user: { id: string; email?: string | null } | null,
+  center: { owner_user_id: string | null }
+): boolean {
+  if (!user) return false;
+  if (center.owner_user_id && center.owner_user_id === user.id) return true;
+  return isCoordinatorEmail(user.email, process.env.COORDINATOR_EMAILS ?? "");
+}
