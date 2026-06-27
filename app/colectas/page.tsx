@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { listColectas } from "@/lib/colectas-data";
+import { getBcvRates, usdView } from "@/lib/rates";
 import { Progress } from "@/components/colectas/Progress";
 import { SessionBar } from "@/components/colectas/SessionBar";
 
 export const dynamic = "force-dynamic";
 
 export default async function ColectasPage() {
-  const colectas = await listColectas();
+  const [colectas, rates] = await Promise.all([listColectas(), getBcvRates()]);
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -48,7 +49,10 @@ export default async function ColectasPage() {
             )}
             <p className="mt-1 text-xs text-gray-500">Responsable: {c.admin_name}</p>
             <div className="mt-3">
-              <Progress goal={c.goal_amount} totals={c.totals} currency={c.currency} />
+              {(() => {
+                const { goalUsd, totalUsd } = usdView(c.goal_amount, c.currency, c.totals, rates);
+                return <Progress goalUsd={goalUsd} totalUsd={totalUsd} received={c.totals} />;
+              })()}
             </div>
           </Link>
         ))}

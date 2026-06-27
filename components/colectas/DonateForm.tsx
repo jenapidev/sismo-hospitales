@@ -49,6 +49,7 @@ export function DonateForm({
           <select name="currency" defaultValue={currency} className={field}>
             <option value="Bs">Bs</option>
             <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
           </select>
         </div>
       </div>

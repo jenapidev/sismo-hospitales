@@ -57,9 +57,10 @@ export function ColectaForm({
         </div>
         <div>
           <label className={label}>Moneda</label>
-          <select name="currency" defaultValue={defaults.currency ?? "Bs"} className={field}>
-            <option value="Bs">Bs</option>
+          <select name="currency" defaultValue={defaults.currency ?? "USD"} className={field}>
             <option value="USD">USD</option>
+            <option value="Bs">Bs</option>
+            <option value="EUR">EUR</option>
           </select>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { normalizeCedula } from "@/lib/cedula";
 
-export const CURRENCIES = ["Bs", "USD"] as const;
+export const CURRENCIES = ["Bs", "USD", "EUR"] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
 export const ACCOUNT_METHODS = ["pago_movil", "bizum", "zelle"] as const;
@@ -14,7 +14,9 @@ function nullable(s: string | undefined): string | null {
 }
 
 function currencyOf(s: string | undefined): Currency {
-  return s === "USD" ? "USD" : "Bs";
+  if (s === "USD") return "USD";
+  if (s === "EUR") return "EUR";
+  return "Bs";
 }
 
 // ---------------------------------------------------------------------------

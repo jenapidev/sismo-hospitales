@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
 import { listColectasByOwner } from "@/lib/colectas-data";
+import { getBcvRates, usdView } from "@/lib/rates";
 import { Progress } from "@/components/colectas/Progress";
 import { SessionBar } from "@/components/colectas/SessionBar";
 
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function MisColectasPage() {
   const user = await getUser();
   if (!user) redirect("/colectas/login?next=/colectas/mias");
-  const colectas = await listColectasByOwner(user.id);
+  const [colectas, rates] = await Promise.all([listColectasByOwner(user.id), getBcvRates()]);
 
   return (
     <main className="mx-auto max-w-3xl p-4 sm:p-6">
@@ -52,7 +53,10 @@ export default async function MisColectasPage() {
               </Link>
             </div>
             <div className="mt-3">
-              <Progress goal={c.goal_amount} totals={c.totals} currency={c.currency} />
+              {(() => {
+                const { goalUsd, totalUsd } = usdView(c.goal_amount, c.currency, c.totals, rates);
+                return <Progress goalUsd={goalUsd} totalUsd={totalUsd} received={c.totals} />;
+              })()}
             </div>
           </div>
         ))}

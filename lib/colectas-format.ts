@@ -17,7 +17,7 @@ export function accountLabel(a: AccountRow): string {
 }
 
 export function money(amount: number, currency: string): string {
-  return `${currency} ${Number(amount).toLocaleString("es-VE")}`;
+  return `${currency} ${Number(amount).toLocaleString("es-VE", { maximumFractionDigits: 2 })}`;
 }
 
 export const STATUS_LABEL: Record<string, string> = {
