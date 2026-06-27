@@ -35,7 +35,7 @@ npm run dev                  # http://localhost:3000
 
 ### 1. Supabase
 1. Create a project at [supabase.com](https://supabase.com).
-2. **SQL Editor** → run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`supabase/migrations/0002_seed_hospitals.sql`](supabase/migrations/0002_seed_hospitals.sql), then [`supabase/migrations/0003_acopio.sql`](supabase/migrations/0003_acopio.sql) (centros de acopio).
+2. **SQL Editor** → run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`supabase/migrations/0002_seed_hospitals.sql`](supabase/migrations/0002_seed_hospitals.sql), [`supabase/migrations/0003_acopio.sql`](supabase/migrations/0003_acopio.sql) (centros de acopio), then [`supabase/migrations/0004_colectas.sql`](supabase/migrations/0004_colectas.sql) (colectas).
 3. **Storage** → create a **private** bucket named `proofs` (or run `npx tsx scripts/setup-storage.ts` with env set).
 4. **Authentication → URL Configuration** → add your site URL and `<site>/auth/callback`
    (and `http://localhost:3000/auth/callback` for local) to the redirect allowlist.

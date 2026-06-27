@@ -30,6 +30,7 @@ const NAV: NavItem[] = [
   { href: "/", label: "Buscar", icon: icon(<><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></>) },
   { href: "/report", label: "Reportar", icon: icon(<><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M19 8v6M22 11h-6" /></>) },
   { href: "/acopio", label: "Centros de acopio", icon: icon(<><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z" /><circle cx="12" cy="10" r="3" /></>) },
+  { href: "/colectas", label: "Colectas", icon: icon(<><path d="M20 12v9H4v-9" /><rect x="2" y="7" width="20" height="5" /><path d="M12 22V7M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7ZM12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7Z" /></>) },
   { href: "/stats", label: "Estadísticas", icon: icon(<><path d="M3 3v18h18" /><rect x="7" y="11" width="3" height="6" /><rect x="13" y="7" width="3" height="10" /></>) },
   { href: "/admin", label: "Coordinación", icon: icon(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /></>) },
 ];
