@@ -32,25 +32,37 @@ export interface AcopioItem {
 export interface CenterWithCounts extends AcopioCenter {
   haveCount: number;
   needCount: number;
+  haveCategories: string[];
+  needCategories: string[];
 }
 
-/** All visible centers with have/need item counts, ordered by name. */
+/** All visible centers with have/need counts and category sets, ordered by name. */
 export async function listCenters(): Promise<CenterWithCounts[]> {
   const supabase = createAnonClient();
   const [{ data: centers }, { data: items }] = await Promise.all([
     supabase.from("acopio_centers").select("*").order("name"),
-    supabase.from("acopio_items").select("center_id,kind"),
+    supabase.from("acopio_items").select("center_id,kind,category"),
   ]);
   const have = new Map<string, number>();
   const need = new Map<string, number>();
+  const haveCat = new Map<string, Set<string>>();
+  const needCat = new Map<string, Set<string>>();
   for (const it of items ?? []) {
-    const m = it.kind === "have" ? have : need;
-    m.set(it.center_id, (m.get(it.center_id) ?? 0) + 1);
+    const countMap = it.kind === "have" ? have : need;
+    countMap.set(it.center_id, (countMap.get(it.center_id) ?? 0) + 1);
+    if (it.category) {
+      const catMap = it.kind === "have" ? haveCat : needCat;
+      const set = catMap.get(it.center_id) ?? new Set<string>();
+      set.add(it.category);
+      catMap.set(it.center_id, set);
+    }
   }
   return (centers ?? []).map((c: AcopioCenter) => ({
     ...c,
     haveCount: have.get(c.id) ?? 0,
     needCount: need.get(c.id) ?? 0,
+    haveCategories: [...(haveCat.get(c.id) ?? [])],
+    needCategories: [...(needCat.get(c.id) ?? [])],
   }));
 }
 
