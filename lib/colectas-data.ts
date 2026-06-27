@@ -38,21 +38,25 @@ export interface DonacionRow {
   created_at: string;
 }
 
+export type CurrencyTotals = { Bs: number; USD: number };
+
 export interface ColectaWithTotal extends ColectaRow {
-  totalRaised: number;
+  totals: CurrencyTotals;
   confirmedCount: number;
 }
 
-/** Sum confirmed donation amounts that match the colecta's own currency. */
-function totalFor(colecta: ColectaRow, donations: DonacionRow[]): { total: number; count: number } {
-  let total = 0;
+/** Sum confirmed donation amounts per currency (no Bs↔USD conversion). */
+function totalsFor(donations: DonacionRow[]): { totals: CurrencyTotals; count: number } {
+  const totals: CurrencyTotals = { Bs: 0, USD: 0 };
   let count = 0;
   for (const d of donations) {
     if (d.status !== "confirmed") continue;
     count += 1;
-    if (d.currency === colecta.currency) total += d.amount ?? 0;
+    const amt = Number(d.amount ?? 0);
+    if (d.currency === "USD") totals.USD += amt;
+    else totals.Bs += amt;
   }
-  return { total, count };
+  return { totals, count };
 }
 
 export async function listColectas(): Promise<ColectaWithTotal[]> {
@@ -68,8 +72,8 @@ export async function listColectas(): Promise<ColectaWithTotal[]> {
     byColecta.set(d.colecta_id, arr);
   }
   return ((colectas as ColectaRow[]) ?? []).map((c) => {
-    const { total, count } = totalFor(c, byColecta.get(c.id) ?? []);
-    return { ...c, totalRaised: total, confirmedCount: count };
+    const { totals, count } = totalsFor(byColecta.get(c.id) ?? []);
+    return { ...c, totals, confirmedCount: count };
   });
 }
 
@@ -105,7 +109,7 @@ export async function listDonaciones(colectaId: string): Promise<DonacionRow[]> 
   return (data as DonacionRow[]) ?? [];
 }
 
-/** Total raised (confirmed, colecta currency) for a single colecta. */
-export function totalRaised(colecta: ColectaRow, donations: DonacionRow[]): number {
-  return totalFor(colecta, donations).total;
+/** Confirmed totals per currency for a single colecta's donations. */
+export function colectaTotals(donations: DonacionRow[]): CurrencyTotals {
+  return totalsFor(donations).totals;
 }

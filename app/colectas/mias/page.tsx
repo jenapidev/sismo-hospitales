@@ -52,7 +52,7 @@ export default async function MisColectasPage() {
               </Link>
             </div>
             <div className="mt-3">
-              <Progress goal={c.goal_amount} total={c.totalRaised} currency={c.currency} />
+              <Progress goal={c.goal_amount} totals={c.totals} currency={c.currency} />
             </div>
           </div>
         ))}

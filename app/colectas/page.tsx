@@ -48,7 +48,7 @@ export default async function ColectasPage() {
             )}
             <p className="mt-1 text-xs text-gray-500">Responsable: {c.admin_name}</p>
             <div className="mt-3">
-              <Progress goal={c.goal_amount} total={c.totalRaised} currency={c.currency} />
+              <Progress goal={c.goal_amount} totals={c.totals} currency={c.currency} />
             </div>
           </Link>
         ))}

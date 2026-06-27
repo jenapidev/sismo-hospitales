@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getColecta, listAccounts, listDonaciones, totalRaised } from "@/lib/colectas-data";
+import { getColecta, listAccounts, listDonaciones, colectaTotals } from "@/lib/colectas-data";
 import { Progress } from "@/components/colectas/Progress";
 import { DonateForm } from "@/components/colectas/DonateForm";
 import { methodLabel, money, STATUS_LABEL, STATUS_BADGE } from "@/lib/colectas-format";
@@ -12,7 +12,7 @@ export default async function ColectaPage({ params }: { params: Promise<{ id: st
   const colecta = await getColecta(id);
   if (!colecta || colecta.hidden) notFound();
   const [accounts, donaciones] = await Promise.all([listAccounts(id), listDonaciones(id)]);
-  const total = totalRaised(colecta, donaciones);
+  const totals = colectaTotals(donaciones);
 
   return (
     <main className="mx-auto max-w-2xl p-4 sm:p-6">
@@ -23,7 +23,7 @@ export default async function ColectaPage({ params }: { params: Promise<{ id: st
       {colecta.description && <p className="mt-2 text-gray-700">{colecta.description}</p>}
 
       <div className="mt-4">
-        <Progress goal={colecta.goal_amount} total={total} currency={colecta.currency} />
+        <Progress goal={colecta.goal_amount} totals={totals} currency={colecta.currency} />
       </div>
 
       <p className="mt-3 text-sm text-gray-500">
