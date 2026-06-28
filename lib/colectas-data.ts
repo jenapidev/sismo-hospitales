@@ -42,15 +42,19 @@ export type CurrencyTotals = { Bs: number; USD: number; EUR: number };
 
 export interface ColectaWithTotal extends ColectaRow {
   totals: CurrencyTotals;
-  confirmedCount: number;
+  donationCount: number;
 }
 
-/** Sum confirmed donation amounts per currency (no Bs↔USD conversion). */
+/**
+ * Sum donation amounts per currency (no Bs↔USD conversion). Counts everything
+ * EXCEPT rejected donations — a reported donation counts by default; marking it
+ * "no verificada" (rejected) subtracts it from the total.
+ */
 function totalsFor(donations: DonacionRow[]): { totals: CurrencyTotals; count: number } {
   const totals: CurrencyTotals = { Bs: 0, USD: 0, EUR: 0 };
   let count = 0;
   for (const d of donations) {
-    if (d.status !== "confirmed") continue;
+    if (d.status === "rejected") continue;
     count += 1;
     const amt = Number(d.amount ?? 0);
     if (d.currency === "USD") totals.USD += amt;
@@ -74,7 +78,7 @@ export async function listColectas(): Promise<ColectaWithTotal[]> {
   }
   return ((colectas as ColectaRow[]) ?? []).map((c) => {
     const { totals, count } = totalsFor(byColecta.get(c.id) ?? []);
-    return { ...c, totals, confirmedCount: count };
+    return { ...c, totals, donationCount: count };
   });
 }
 
