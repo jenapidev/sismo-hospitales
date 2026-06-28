@@ -9,16 +9,22 @@ export interface BcvRates {
  * Official BCV rates (Bs per USD / per EUR) from the free ve.dolarapi.com.
  * Cached for 1 hour via Next's fetch cache. Returns null if unavailable.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function officialPromedio(list: any): number {
+  const arr = Array.isArray(list) ? list : [];
+  const oficial = arr.find((x) => x?.fuente === "oficial");
+  return Number(oficial?.promedio);
+}
+
 export async function getBcvRates(): Promise<BcvRates | null> {
   try {
+    // List endpoints; pick the entry with fuente === "oficial" (BCV).
     const [u, e] = await Promise.all([
-      fetch("https://ve.dolarapi.com/v1/dolares/oficial", { next: { revalidate: 3600 } }),
-      fetch("https://ve.dolarapi.com/v1/euros/oficial", { next: { revalidate: 3600 } }),
+      fetch("https://ve.dolarapi.com/v1/dolares", { next: { revalidate: 3600 } }),
+      fetch("https://ve.dolarapi.com/v1/euros", { next: { revalidate: 3600 } }),
     ]);
-    const uj = await u.json();
-    const ej = await e.json();
-    const bsPerUsd = Number(uj?.promedio);
-    const bsPerEur = Number(ej?.promedio);
+    const bsPerUsd = officialPromedio(await u.json());
+    const bsPerEur = officialPromedio(await e.json());
     if (!Number.isFinite(bsPerUsd) || bsPerUsd <= 0) return null;
     return { bsPerUsd, bsPerEur: Number.isFinite(bsPerEur) && bsPerEur > 0 ? bsPerEur : 0 };
   } catch {
