@@ -17,6 +17,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.45.4",
+    "exceljs": "^4.4.0",
     "googleapis": "^144.0.0",
     "leaflet": "^1.9.4",
     "next": "^15.3.0",
