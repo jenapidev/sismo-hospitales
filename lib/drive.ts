@@ -12,7 +12,7 @@ const UA = {
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36",
 };
 
-export type DriveKind = "pdf" | "gdoc" | "gsheet" | "xlsx" | "folder" | "other";
+export type DriveKind = "pdf" | "gdoc" | "gsheet" | "xlsx" | "image" | "folder" | "other";
 
 export interface DriveFile {
   id: string;
@@ -27,13 +27,14 @@ function classify(tooltip: string): DriveKind {
   if (/Google Docs$/.test(tooltip)) return "gdoc";
   if (/Google Sheets$/.test(tooltip)) return "gsheet";
   if (/Microsoft Excel$/.test(tooltip) || /\.xlsx?\b/i.test(tooltip)) return "xlsx";
+  if (/image$/i.test(tooltip) || /\.(jpe?g|png|heic|webp|gif)\b/i.test(tooltip)) return "image";
   if (/older$/.test(tooltip)) return "folder";
   return "other";
 }
 
 function cleanName(tooltip: string): string {
   return tooltip
-    .replace(/ (PDF|Google Docs|Google Sheets|Microsoft Excel|Shared folder|Folder)$/, "")
+    .replace(/ (PDF|Google Docs|Google Sheets|Microsoft Excel|Image|Shared folder|Folder)$/, "")
     .trim();
 }
 
@@ -184,7 +185,20 @@ export function csvToRows(text: string): string[][] {
   return rows;
 }
 
-/** Files we ingest for the registry sync (everything text-extractable, not images). */
+/** Files we ingest via text/tabular parsing (not images — those go through OCR). */
 export function isSyncable(file: DriveFile): boolean {
   return ["pdf", "gdoc", "gsheet", "xlsx"].includes(file.kind);
+}
+
+/** Download an image's bytes + mime type (for OCR). */
+export async function downloadImageBytes(id: string): Promise<{ buffer: Buffer; mime: string }> {
+  const res = await fetch(`https://drive.google.com/uc?export=download&id=${id}`, {
+    headers: UA,
+    redirect: "follow",
+  });
+  if (!res.ok) throw new Error(`download image ${id}: HTTP ${res.status}`);
+  const ct = res.headers.get("content-type") || "";
+  const buffer = Buffer.from(await res.arrayBuffer());
+  const mime = ct.startsWith("image/") ? ct.split(";")[0] : "image/jpeg";
+  return { buffer, mime };
 }
