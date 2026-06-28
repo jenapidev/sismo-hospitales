@@ -14,6 +14,16 @@ export interface HospitalMatch {
   end: number;
 }
 
+/** A url-safe slug from an arbitrary place name (for auto-created places). */
+export function slugify(name: string): string {
+  const s = foldAccents(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return s || "sin-lugar";
+}
+
 export function foldAccents(s: string): string {
   return s
     .replace(/[áàäâã]/gi, (c) => (c === c.toUpperCase() ? "A" : "a"))
