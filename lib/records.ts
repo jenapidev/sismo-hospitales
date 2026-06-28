@@ -150,13 +150,21 @@ export function createSupabaseRecordsRepo(admin: any): RecordsRepo {
       const files = [
         ...new Set(refs.map((r) => r.slice(0, r.lastIndexOf("#")))),
       ];
+      const PAGE = 1000;
       for (const file of files) {
-        const { data, error } = await admin
-          .from("records")
-          .select(cols)
-          .eq("source_file", file);
-        if (error) throw new Error(`getExisting failed: ${error.message}`);
-        for (const r of data ?? []) map.set(r.source_row_ref, r as ExistingRecord);
+        // Paginate: Supabase caps a select at ~1000 rows by default. Large source
+        // files (>1000 records) would otherwise miss existing rows and the sync
+        // would try to re-insert them, violating the (source_file,row_ref) unique key.
+        for (let from = 0; ; from += PAGE) {
+          const { data, error } = await admin
+            .from("records")
+            .select(cols)
+            .eq("source_file", file)
+            .range(from, from + PAGE - 1);
+          if (error) throw new Error(`getExisting failed: ${error.message}`);
+          for (const r of data ?? []) map.set(r.source_row_ref, r as ExistingRecord);
+          if (!data || data.length < PAGE) break;
+        }
       }
       return map;
     },
