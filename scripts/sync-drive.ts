@@ -11,11 +11,13 @@ import {
   downloadText,
   downloadSheetCsv,
   downloadXlsxRows,
+  downloadImageBytes,
   csvToRows,
   isSyncable,
 } from "@/lib/drive";
 import { parseDocument, type ParsedRecord } from "@/lib/parser";
 import { parseTabular } from "@/lib/parser/tabular";
+import { extractPeopleFromImage } from "@/lib/ocr";
 import { createSupabaseRecordsRepo, upsertDriveRecords } from "@/lib/records";
 import { applyDuplicateGroups } from "@/lib/dedup";
 
@@ -91,6 +93,40 @@ async function main() {
       }
     }
 
+    // OCR pass (only if a Gemini key is set): read NEW images once, capped per run.
+    const ocrProcessed: { drive_file_id: string; records_found: number; status: string }[] = [];
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      const cap = Number(process.env.OCR_MAX_PER_RUN || 30);
+      const images = all.filter((f) => f.kind === "image");
+      const { data: done } = await admin.from("ocr_images").select("drive_file_id");
+      const seen = new Set<string>((done ?? []).map((d: { drive_file_id: string }) => d.drive_file_id));
+      const todo = images.filter((f) => !seen.has(f.id)).slice(0, cap);
+      console.log(`OCR: ${images.length} imágenes, ${todo.length} nuevas (tope ${cap}).`);
+      for (const img of todo) {
+        try {
+          const { buffer, mime } = await downloadImageBytes(img.id);
+          const records = await extractPeopleFromImage(buffer, mime, {
+            imageId: img.id,
+            place: img.folderName || img.name,
+            apiKey: geminiKey,
+            model: process.env.GEMINI_MODEL,
+          });
+          parsedFiles.push({ id: img.id, name: img.name, records });
+          ocrProcessed.push({
+            drive_file_id: img.id,
+            records_found: records.length,
+            status: records.length ? "ok" : "no_list",
+          });
+          console.log(`  [ocr] ${img.name}: ${records.length} personas`);
+        } catch (e) {
+          // Don't mark as processed — retry next run.
+          errors.push(`ocr ${img.name}: ${(e as Error).message}`);
+          console.warn("  warn ocr", (e as Error).message);
+        }
+      }
+    }
+
     // Ensure every place referenced exists.
     const placeBySlug = new Map<string, string>();
     for (const pf of parsedFiles)
@@ -114,6 +150,14 @@ async function main() {
       skipped += res.skipped;
     }
 
+    // Remember which images were OCR'd so we never re-process them.
+    if (ocrProcessed.length) {
+      const { error: ocrErr } = await admin
+        .from("ocr_images")
+        .upsert(ocrProcessed, { onConflict: "drive_file_id" });
+      if (ocrErr) errors.push(`ocr_images upsert: ${ocrErr.message}`);
+    }
+
     const dup = await applyDuplicateGroups(admin);
 
     await admin
@@ -131,8 +175,8 @@ async function main() {
       .eq("id", runId);
 
     console.log(
-      `Sync done: files=${syncable.length} parsed=${parsed} inserted=${inserted} ` +
-        `updated=${updated} review=${flaggedReview} skipped=${skipped} ` +
+      `Sync done: files=${syncable.length} ocrImages=${ocrProcessed.length} parsed=${parsed} ` +
+        `inserted=${inserted} updated=${updated} review=${flaggedReview} skipped=${skipped} ` +
         `places=${hospitalIdBySlug.size} dupGroups=${dup.groups} warnings=${errors.length}`
     );
   } catch (e) {

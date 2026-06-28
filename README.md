@@ -35,7 +35,7 @@ npm run dev                  # http://localhost:3000
 
 ### 1. Supabase
 1. Create a project at [supabase.com](https://supabase.com).
-2. **SQL Editor** → run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`supabase/migrations/0002_seed_hospitals.sql`](supabase/migrations/0002_seed_hospitals.sql), [`supabase/migrations/0003_acopio.sql`](supabase/migrations/0003_acopio.sql) (centros de acopio), [`supabase/migrations/0004_colectas.sql`](supabase/migrations/0004_colectas.sql) (colectas), then [`supabase/migrations/0005_eur.sql`](supabase/migrations/0005_eur.sql) (EUR currency).
+2. **SQL Editor** → run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql), [`supabase/migrations/0002_seed_hospitals.sql`](supabase/migrations/0002_seed_hospitals.sql), [`supabase/migrations/0003_acopio.sql`](supabase/migrations/0003_acopio.sql) (centros de acopio), [`supabase/migrations/0004_colectas.sql`](supabase/migrations/0004_colectas.sql) (colectas), [`supabase/migrations/0005_eur.sql`](supabase/migrations/0005_eur.sql) (EUR currency), then [`supabase/migrations/0006_ocr_images.sql`](supabase/migrations/0006_ocr_images.sql) (image OCR cache).
 3. **Storage** → create a **private** bucket named `proofs` (or run `npx tsx scripts/setup-storage.ts` with env set).
 4. **Authentication → Providers → Email** → turn **OFF "Confirm email"** so sign-ups are
    instant (email/password auth — no per-login emails, so email rate limits never bottleneck
