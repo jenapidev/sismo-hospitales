@@ -107,6 +107,27 @@ export async function downloadSheetCsv(id: string): Promise<string> {
   return res.text();
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function cellText(c: any): string {
+  try {
+    const t = c?.text;
+    if (typeof t === "string") return t;
+    if (t != null) return String(t);
+  } catch {
+    /* fall through to value */
+  }
+  const v = c?.value;
+  if (v == null) return "";
+  if (typeof v === "object") {
+    // rich text / hyperlink / formula result objects
+    if (typeof v.text === "string") return v.text;
+    if (v.result != null) return String(v.result);
+    if (Array.isArray(v.richText)) return v.richText.map((r: { text?: string }) => r.text ?? "").join("");
+    return "";
+  }
+  return String(v);
+}
+
 /** Excel (.xlsx) → rows of the first worksheet as strings. */
 export async function downloadXlsxRows(id: string): Promise<string[][]> {
   const res = await fetch(`https://drive.google.com/uc?export=download&id=${id}`, {
@@ -122,7 +143,7 @@ export async function downloadXlsxRows(id: string): Promise<string[][]> {
   const rows: string[][] = [];
   ws.eachRow({ includeEmpty: false }, (row) => {
     const cells: string[] = [];
-    row.eachCell({ includeEmpty: true }, (c) => cells.push((c.text ?? "").toString()));
+    row.eachCell({ includeEmpty: true }, (c) => cells.push(cellText(c)));
     rows.push(cells);
   });
   return rows;

@@ -2,14 +2,22 @@
  * Drive → Supabase sync. Runs every 30 min via GitHub Actions (and on demand).
  *
  * No Google API key required: the source folder is public and is scraped directly.
+ * Ingests all non-image sources (PDF, Google Doc, Google Sheet, .xlsx) across subfolders.
  * Only Supabase service-role credentials are needed.
  */
 import { createClient } from "@supabase/supabase-js";
-import { listFolder, downloadText, isSyncable } from "@/lib/drive";
-import { createSupabaseRecordsRepo } from "@/lib/records";
-import { syncParsedFiles, type SyncFile } from "@/lib/sync";
+import {
+  listFolderTree,
+  downloadText,
+  downloadSheetCsv,
+  downloadXlsxRows,
+  csvToRows,
+  isSyncable,
+} from "@/lib/drive";
+import { parseDocument, type ParsedRecord } from "@/lib/parser";
+import { parseTabular } from "@/lib/parser/tabular";
+import { createSupabaseRecordsRepo, upsertDriveRecords } from "@/lib/records";
 import { applyDuplicateGroups } from "@/lib/dedup";
-import { SLUG_NAMES } from "@/lib/parser/hospitals";
 
 function env(name: string): string {
   const v = process.env[name];
@@ -17,36 +25,34 @@ function env(name: string): string {
   return v;
 }
 
-const ROOT_FOLDER_ID =
-  process.env.DRIVE_ROOT_FOLDER_ID || "1o36ifaRz45kAs5rKzci49aD0mP5JB_YI";
+const ROOT_FOLDER_ID = process.env.DRIVE_ROOT_FOLDER_ID || "1o36ifaRz45kAs5rKzci49aD0mP5JB_YI";
 
+/** Create any places (hospitals/centros/shelters) seen in the data but not yet stored. */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function ensureHospitals(admin: any): Promise<Map<string, string>> {
+async function ensurePlaces(admin: any, placeBySlug: Map<string, string>): Promise<Map<string, string>> {
   const { data: existing, error } = await admin.from("hospitals").select("id,slug");
   if (error) throw new Error(`read hospitals: ${error.message}`);
   const map = new Map<string, string>();
   for (const h of existing ?? []) map.set(h.slug, h.id);
 
-  const missing = Object.entries(SLUG_NAMES)
+  const missing = [...placeBySlug.entries()]
     .filter(([slug]) => !map.has(slug))
-    .map(([slug, name]) => ({ slug, name, location: "Caracas" }));
+    .map(([slug, name]) => ({ slug, name }));
   if (missing.length) {
     const { data: created, error: insErr } = await admin
       .from("hospitals")
       .insert(missing)
       .select("id,slug");
-    if (insErr) throw new Error(`create hospitals: ${insErr.message}`);
+    if (insErr) throw new Error(`create places: ${insErr.message}`);
     for (const h of created ?? []) map.set(h.slug, h.id);
   }
   return map;
 }
 
 async function main() {
-  const admin = createClient(
-    env("NEXT_PUBLIC_SUPABASE_URL"),
-    env("SUPABASE_SERVICE_ROLE_KEY"),
-    { auth: { persistSession: false, autoRefreshToken: false } }
-  );
+  const admin = createClient(env("NEXT_PUBLIC_SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 
   const { data: run, error: runErr } = await admin
     .from("sync_runs")
@@ -58,26 +64,56 @@ async function main() {
   const errors: string[] = [];
 
   try {
-    const all = await listFolder(ROOT_FOLDER_ID);
+    const all = await listFolderTree(ROOT_FOLDER_ID);
     const syncable = all.filter(isSyncable);
-    console.log(`Found ${all.length} items, ${syncable.length} syncable.`);
+    console.log(`Found ${all.length} files, ${syncable.length} syncable.`);
 
-    const files: SyncFile[] = [];
+    // Parse each file into records. Use the Drive file ID as the source key
+    // (file names are NOT unique across subfolders, e.g. "1.pdf", "hospital").
+    const parsedFiles: { id: string; name: string; records: ParsedRecord[] }[] = [];
     for (const f of syncable) {
       try {
-        const text = await downloadText(f);
-        files.push({ name: f.name, text });
-        console.log(`  downloaded ${f.name} (${text.length} chars)`);
+        const place = f.folderName || f.name;
+        let records: ParsedRecord[] = [];
+        if (f.kind === "pdf" || f.kind === "gdoc") {
+          records = parseDocument(await downloadText(f), f.id);
+        } else if (f.kind === "gsheet") {
+          records = parseTabular(csvToRows(await downloadSheetCsv(f.id)), f.id, place);
+        } else if (f.kind === "xlsx") {
+          records = parseTabular(await downloadXlsxRows(f.id), f.id, place);
+        }
+        parsedFiles.push({ id: f.id, name: f.name, records });
+        console.log(`  [${f.kind}] ${f.name}: ${records.length} filas`);
       } catch (e) {
-        const msg = `download ${f.name}: ${(e as Error).message}`;
-        console.warn(msg);
+        const msg = `${f.name}: ${(e as Error).message}`;
+        console.warn("  warn", msg);
         errors.push(msg);
       }
     }
 
-    const hospitalIdBySlug = await ensureHospitals(admin);
+    // Ensure every place referenced exists.
+    const placeBySlug = new Map<string, string>();
+    for (const pf of parsedFiles)
+      for (const r of pf.records)
+        if (r.hospitalSlug) placeBySlug.set(r.hospitalSlug, r.hospitalName ?? r.hospitalSlug);
+    const hospitalIdBySlug = await ensurePlaces(admin, placeBySlug);
+
+    // Upsert per file (idempotent, human-wins).
     const repo = createSupabaseRecordsRepo(admin);
-    const res = await syncParsedFiles(repo, hospitalIdBySlug, files);
+    let parsed = 0,
+      inserted = 0,
+      updated = 0,
+      flaggedReview = 0,
+      skipped = 0;
+    for (const pf of parsedFiles) {
+      parsed += pf.records.length;
+      const res = await upsertDriveRecords(repo, hospitalIdBySlug, pf.records, pf.id);
+      inserted += res.inserted;
+      updated += res.updated;
+      flaggedReview += res.flaggedReview;
+      skipped += res.skipped;
+    }
+
     const dup = await applyDuplicateGroups(admin);
 
     await admin
@@ -85,18 +121,19 @@ async function main() {
       .update({
         finished_at: new Date().toISOString(),
         files_seen: syncable.length,
-        records_parsed: res.parsed,
-        inserted: res.inserted,
-        updated: res.updated,
-        flagged_review: res.flaggedReview,
+        records_parsed: parsed,
+        inserted,
+        updated,
+        flagged_review: flaggedReview,
         errors: JSON.stringify(errors),
         status: errors.length ? "ok_with_warnings" : "ok",
       })
       .eq("id", runId);
 
     console.log(
-      `Sync done: parsed=${res.parsed} inserted=${res.inserted} updated=${res.updated} ` +
-        `review=${res.flaggedReview} dupGroups=${dup.groups} warnings=${errors.length}`
+      `Sync done: files=${syncable.length} parsed=${parsed} inserted=${inserted} ` +
+        `updated=${updated} review=${flaggedReview} skipped=${skipped} ` +
+        `places=${hospitalIdBySlug.size} dupGroups=${dup.groups} warnings=${errors.length}`
     );
   } catch (e) {
     const msg = (e as Error).message;
